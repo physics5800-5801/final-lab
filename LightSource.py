@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from termcolor import cprint
-# import piplates.DAQC2plate as DAQC2
+import piplates.DAQC2plate as DAQC2
 
 ######################################################################
 ## Authorship Information
@@ -60,7 +60,7 @@ class Light_Source(object):
     def get_data(self):
         return self.__source_df
 
-    def get_stopping_volage(self):
+    def get_stopping_voltage(self):
         return self.__stop_volatge
 
     def get_color(self):
@@ -108,7 +108,7 @@ class Light_Source(object):
         self.__stop_voltage = retarding_voltage[index][0]
         return
 
-    def __create_source_df(source_data):
+    def __create_source_df(self, source_data):
         source_df = pd.DataFrame([], columns=['V_r', 'I_ub', 'I_b', 'I_φ'])
         source_df['V_r'] = source_data[:,0]
         source_df['I_ub'] = source_data[:,1]
@@ -134,8 +134,8 @@ class Light_Source(object):
         for i in range(voltages.size):
             V_r = voltages[i]
             source_data[i,0] = V_r
-            # DAQC2.setDAC(0,0,V_r)
-            # V_p = DAQC2.getADC(0,0) - DAQC2.getADC(0,1)
+            DAQC2.setDAC(0,0,V_r)
+            V_p = DAQC2.getADC(0,0) - DAQC2.getADC(0,1)
             source_data[i,1] = V_p
             source_data[i,2] = dark_current
         self.__create_source_df(source_data)

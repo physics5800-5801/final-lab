@@ -55,7 +55,7 @@ class Experiment(object):
         self.__datalog = []
         self.__energy_df = None
         self.__plank = 0
-        self.__worf_func = 0
+        self.__work_func = 0
         return
 
     def __slugify(self, value, allow_unicode=False):
@@ -85,14 +85,23 @@ class Experiment(object):
             value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
         value = re.sub(r'[^\w\s-]', '', value.lower())
         return re.sub(r'[-\s]+', '-', value).strip('-_')
-
+    
     def get_name(self):
-        """Class method docstrings go here TODO."""
         return self.__name
 
     def get_option_range(self):
         option_keys = self.__options.keys()
         return (min(option_keys), max(option_keys))
+    
+    def __create_energy_df(self):
+        source_data = np.array([[entry.get_wavelength(), entry.get_stopping_voltage()] for entry in self.__datalog])
+        energy_df = pd.DataFrame([], columns=['λ', 'ν', 'V_s', 'E'])
+        energy_df['λ'] = (source_data[:,0] * 1e-09)
+        energy_df['ν'] = self.__SPEED_LIGHT / (self.__N_AIR * energy_df['λ'])
+        energy_df['V_s'] = source_data[:,1]
+        energy_df['E'] = abs(self.__ELECTRON_CHARGE) * energy_df['V_s']
+        self.__energy_df = energy_df.sort_values(by=['λ'])
+        return
 
     def display_options(self):
         """
@@ -254,7 +263,7 @@ class Experiment(object):
 
     def __display_results(self):
         if (len(self.__datalog) > 0):
-            x = 0
+            self.__create_energy_df()
         else:
             print('[+]The datalog is already empty')
         return
