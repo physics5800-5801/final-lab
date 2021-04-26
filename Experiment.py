@@ -44,6 +44,9 @@ __status__ = "Development"
 class Experiment(object):
     """Class docstrings go here TODO."""
     __PLANKS_CONSTANT = 6.62607015e-34
+    __SPEED_LIGHT = 299792458
+    __N_AIR = 1.000293
+    __ELECTRON_CHARGE = -1.602176634e-19
 
     def __init__(self, name="unnamed"):
         """Class method docstrings go here TODO."""
@@ -236,17 +239,31 @@ class Experiment(object):
                 cprint("ERROR: invalid input: please enter either 'y' or 'n'", 'red')
                 confirmation = input('Would you like to proceed (y/n)?: ').lower()
             if (confirmation == 'y'):
-                # try:
+                try:
                     out_dir = './' + self.__name
                     if (not os.path.exists(out_dir)):
                         os.mkdir(out_dir)
                     for i in range(len(self.__datalog)):
                         self.__datalog[i].save_data(out_dir)
                     print('[+]The datalog has been saved')
-                # except:
-                    # cprint('ERROR: save_log: unable to save data to files', 'red')
+                except:
+                    cprint('ERROR: save_log: unable to save data to files', 'red')
         else:
             print('[+]The datalog is currently empty')
+        return
+
+    def __display_results(self):
+        if (len(self.__datalog) > 0):
+            x = 0
+        else:
+            print('[+]The datalog is already empty')
+        return
+
+    def __save_results(self):
+        if (len(self.__datalog) > 0):
+            x = 0
+        else:
+            print('[+]The datalog is already empty')
         return
 
     def __clear_log(self):
@@ -270,4 +287,6 @@ class Experiment(object):
                  4: (__display_log, 'Display current datalog'),
                  5: (__view_log_entry, 'View datalog entry'),
                  6: (__save_log, 'Save datalog entries to files'),
-                 7: (__clear_log, 'Clear datalog')}
+                 7: (__display_results, 'Display estimate results'),
+                 8: (__save_results, 'Save results'),
+                 9: (__clear_log, 'Clear datalog')}
