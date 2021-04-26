@@ -107,7 +107,7 @@ class Experiment(object):
         return self.__options[option][0](self)
     
     def __quit(self):
-        print('Confirmation - Unsaved data will be lost.')
+        print('Warning - Unsaved data will be lost.')
         confirmation = input('Would you like to proceed (y/n)?: ').lower()
         while (confirmation != 'y' and confirmation != 'n'):
             cprint("ERROR: invalid input: please enter either 'y' or 'n'", 'red')
@@ -150,6 +150,7 @@ class Experiment(object):
     def __remove_log_entry(self):
         if (len(self.__datalog) > 0):
             self.__display_log()
+            print('Warning - This action cannot be undone')
             try:
                 indx = int(input('Select the entry to remove: '))
                 if (indx >= 0 and indx < len(self.__datalog)):
@@ -166,7 +167,34 @@ class Experiment(object):
 
     def __update_log_entry(self):
         if (len(self.__datalog) > 0):
-            x = 0
+            self.__display_log()
+            print('Warning - This operation will overwrite existing data')
+            try:
+                indx = int(input('Select the entry to update: '))
+                if (indx >= 0 and indx < len(self.__datalog)):
+                    entry = self.__datalog.pop(indx)
+                    print('{i: >2}. '.format(i=indx), entry)
+                    new_entry = source.Light_Source(entry.get_wavelength(), entry.get_type())
+                    from_file = input('Load data from csv file (y/n)?: ').lower()
+                    while (from_file != 'y' and from_file != 'n'):
+                        cprint("ERROR: invalid input: please enter either 'y' or 'n'", 'red')
+                        from_file = input('Load data from csv file (y/n)?: ').lower()
+                    if (from_file == 'y'):
+                        try:
+                            new_entry.load_data_from_csv(input('Enter csv file path: '))
+                        except:
+                            cprint('ERROR: read_csv: unable to load file', 'red')
+                            return
+                    else:
+                        new_entry.collect_data()
+                    print('[+]Updated entry:')
+                    print('->', new_entry)
+                    new_entry.plot_data()
+                    self.__datalog += [new_entry]
+                else:
+                    cprint('ERROR: invalid entry: no entries were updated', 'red')
+            except:
+                cprint('ERROR: invalid entry: no entries were updated', 'red')
         else:
             print('[+]The datalog is currently empty')
         return
@@ -202,20 +230,28 @@ class Experiment(object):
 
     def __save_log(self):
         if (len(self.__datalog) > 0):
-            out_dir = './' + self.__name
-            if (not os.path.exists(out_dir)):
-                os.mkdir(out_dir)
-            for i in range(len(self.__datalog)):
-                entry = self.__datalog[i]
-                path = out_dir + '/' + entry.get_type().lower() + '_' + str(round(entry.get_wavelength())) + 'nm.csv'
-                entry.get_data().to_csv(path, encoding='utf-8', index=False)
+            print('Warning - This action may overwrite existing save files')
+            confirmation = input('Would you like to proceed (y/n)?: ').lower()
+            while (confirmation != 'y' and confirmation != 'n'):
+                cprint("ERROR: invalid input: please enter either 'y' or 'n'", 'red')
+                confirmation = input('Would you like to proceed (y/n)?: ').lower()
+            if (confirmation == 'y'):
+                # try:
+                    out_dir = './' + self.__name
+                    if (not os.path.exists(out_dir)):
+                        os.mkdir(out_dir)
+                    for i in range(len(self.__datalog)):
+                        self.__datalog[i].save_data(out_dir)
+                    print('[+]The datalog has been saved')
+                # except:
+                    # cprint('ERROR: save_log: unable to save data to files', 'red')
         else:
             print('[+]The datalog is currently empty')
         return
 
     def __clear_log(self):
         if (len(self.__datalog) > 0):
-            print('Confirmation - This action cannot be undone.')
+            print('Warning - This action cannot be undone')
             confirmation = input('Would you like to proceed (y/n)?: ').lower()
             while (confirmation != 'y' and confirmation != 'n'):
                 cprint("ERROR: invalid input: please enter either 'y' or 'n'", 'red')

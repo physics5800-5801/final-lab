@@ -89,11 +89,11 @@ class Light_Source(object):
         elif (λ >= 500 and λ < 570):
             return 1.2
         elif (λ >= 570 and λ < 590):
-            return 0.9
+            return 1.0
         elif (λ >= 590 and λ < 610):
-            return 0.7
+            return 0.8
         elif (λ >= 610 and λ <= 700):
-            return 0.6
+            return 0.7
         else:
             return 2
 
@@ -157,4 +157,22 @@ class Light_Source(object):
         plt.gca().invert_yaxis()
         plt.grid()
         plt.show()
+        return
+
+    def save_data(self, out_dir='.'):
+        path = out_dir + '/' + self.__source_type.lower() + '_' + str(round(self.__wavelength)) + 'nm.csv'
+        self.__source_df.to_csv(path, encoding='utf-8', index=False)
+
+        path = path.replace('.csv', '.jpg')
+        retarding_voltage = np.array(self.__source_df['V_r'], dtype='float').reshape(-1,1)
+        photocurrent = np.array(self.__source_df['I_φ'], dtype='float').reshape(-1,1)
+        fig = plt.figure()
+        plt.scatter(retarding_voltage, photocurrent, color='black')
+        plt.title('{0: .2f}nm {1:} Stopping Voltage'.format(self.__wavelength, self.__source_type), fontsize=18)
+        plt.xlabel('Retarding Voltage (V)', fontsize=14)
+        plt.ylabel('Photocurrent (µA)', fontsize=14)
+        plt.gca().invert_yaxis()
+        plt.grid()
+        fig.savefig(path, bbox_inches='tight', dpi=250)
+        plt.close('all')
         return
