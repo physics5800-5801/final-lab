@@ -15,6 +15,7 @@ Shannon entropy and frequency normalization.
 ######################################################################
 
 import sys
+from termcolor import cprint
 import Experiment as exp
 
 ######################################################################
@@ -40,25 +41,20 @@ def print_welcome_banner():
     Prints the program welcome banner and instructions.
     """
 
-    print("Welcome! Create your own list of rectangles.")
-    print("You will be asked to provide information about each rectangle in your list by name.")
-    print("Type the word 'stop' for the rectangle name when you are done.\n")
-
-def print_menu_options():
-    """
-    TODO.
-    """
-
-    print("MENU")
+    # FIXME
+    print('Welcome! Create your own list of rectangles.')
+    print('You will be asked to provide information about each rectangle in your list by name.')
+    print('Type the word stop for the rectangle name when you are done.\n')
+    return
 
 def get_option(min=0, max=sys.maxsize):
     """TODO.
 
     Parameters
     ----------
-    min : int
+    min : int, optional
         TODO.
-    max : int
+    max : int, optional
         TODO.
 
     Returns
@@ -72,9 +68,10 @@ def get_option(min=0, max=sys.maxsize):
         try:
             option = int(input('Select an option: '))
             if (option < min or option > max):
-                print('ERROR: invalid option: valid options are', min, '-', max)
+                cprint('ERROR: invalid option: valid options are ' + str(min) + '-' + str(max), 'red')
         except:
-            print('ERROR: invalid input: option must be a valid integer')   
+            cprint('ERROR: invalid input: option must be a valid integer', 'red')
+    print()
     return option
 
 ######################################################################
@@ -82,16 +79,21 @@ def get_option(min=0, max=sys.maxsize):
 ######################################################################
 
 def main():
+    """TODO."""
+    
     print_welcome_banner()
 
-    option = 1
-    PE_exp = exp.Experiment('PE_exp')
-    while (option > 0):
-        print_menu_options()
-        print(PE_exp.get_name())
-        option = get_option()
-        print()
-        
+    PEF_exp = exp.Experiment(input('Enter the experiment name: '))
+    print("Beginning experiment '{name}'".format(name=PEF_exp.get_name()))
+    
+    end_exp = False
+    option_range = PEF_exp.get_option_range()
+    while (not end_exp):
+        PEF_exp.display_options()
+        option = get_option(min=option_range[0], max=option_range[1])
+        end_exp = PEF_exp.process_option(option)
 
-if __name__ == "__main__":
+    return 0
+
+if __name__ == '__main__':
     main()
