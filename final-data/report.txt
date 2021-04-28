@@ -1,0 +1,18 @@
+--------------- Datalog for final-lab ---------------
+ 0.  Type: Laser,   λ: 405.80 nm,   V_s: 1.397 V
+ 1.  Type: Laser,   λ: 530.30 nm,   V_s: 0.632 V
+ 2.  Type: Laser,   λ: 654.90 nm,   V_s: 0.271 V
+ 3.  Type:   LED,   λ: 404.00 nm,   V_s: 1.201 V
+ 4.  Type:   LED,   λ: 458.50 nm,   V_s: 0.884 V
+ 5.  Type:   LED,   λ: 509.30 nm,   V_s: 0.688 V
+ 6.  Type:   LED,   λ: 570.00 nm,   V_s: 0.340 V
+ 7.  Type:   LED,   λ: 596.00 nm,   V_s: 0.312 V
+
+-------------------- Report --------------------
+Cesium-Antimony Work Function (Φ):
+  actual   = 1.43-1.59 eV
+  estimate = 1.60415 eV
+Plank's Constant (h):
+  actual   = 6.62607015e-34 J⋅s
+  estimate = 6.22777045e-34 J⋅s
+  % error  = 6.0111%
