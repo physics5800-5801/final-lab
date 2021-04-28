@@ -14,12 +14,12 @@ Shannon entropy and frequency normalization.
 ## Imports 
 ######################################################################
 
-import re
-import unicodedata
-import os
+import re, unicodedata
+import os, sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 from termcolor import cprint
 import LightSource as source
 
@@ -38,12 +38,13 @@ __email__ = "connergraham888@gmail.com"
 __status__ = "Development"
 
 ######################################################################
-# Class Definition
+# Experiment Class Definition
 ######################################################################
 
 class Experiment(object):
     """Class docstrings go here TODO."""
     __PLANKS_CONSTANT = 6.62607015e-34
+    __WF_CESIUM_ANTIMONY = (1.43,1.59)
     __SPEED_LIGHT = 299792458
     __N_AIR = 1.000293
     __ELECTRON_CHARGE = -1.602176634e-19
@@ -92,6 +93,9 @@ class Experiment(object):
     def get_option_range(self):
         option_keys = self.__options.keys()
         return (min(option_keys), max(option_keys))
+
+    def __get_plank_error(self):
+        return (abs((self.__plank - self.__PLANKS_CONSTANT) / self.__PLANKS_CONSTANT) * 100)
     
     def __create_energy_df(self):
         source_data = np.array([[entry.get_wavelength(), entry.get_stopping_voltage()] for entry in self.__datalog])
@@ -101,6 +105,78 @@ class Experiment(object):
         energy_df['V_s'] = source_data[:,1]
         energy_df['E'] = abs(self.__ELECTRON_CHARGE) * energy_df['V_s']
         self.__energy_df = energy_df.sort_values(by=['λ'])
+        return
+
+    def __get_color(self, wavelength_nm):
+        if (wavelength_nm >= 400 and wavelength_nm < 450):
+            return 'darkviolet'
+        elif (wavelength_nm >= 450 and wavelength_nm < 500):
+            return 'blue'
+        elif (wavelength_nm >= 500 and wavelength_nm < 570):
+            return 'forestgreen'
+        elif (wavelength_nm >= 570 and wavelength_nm < 590):
+            return 'gold'
+        elif (wavelength_nm >= 590 and wavelength_nm < 610):
+            return 'darkorange'
+        elif (wavelength_nm >= 610 and wavelength_nm <= 700):
+            return 'red'
+        else:
+            return 'black'
+
+    def __plot_energy_data(self, margin=1e-20, save=False):
+        frequency = np.array(self.__energy_df['ν'], dtype='float').reshape(-1,1)
+        energy = np.array(self.__energy_df['E'], dtype='float').reshape(-1,1)
+        source_colors = [self.__get_color(λ/1e-09) for λ in self.__energy_df['λ']]
+
+        energy_model = LinearRegression()
+        energy_model.fit(frequency, energy)
+        weights = np.array([energy_model.intercept_, energy_model.coef_], dtype=object).flatten()
+
+        path = './' + self.__name + '/' + 'plank_estimate.jpg'
+        Y_pred = weights[1]*frequency + weights[0]
+        fig = plt.figure()
+        plt.scatter(frequency, energy, color=source_colors)
+        label = 'KE = ({0:.4e})f {1:+.4e}'.format(weights[1], weights[0])
+        plt.plot([min(frequency), max(frequency)], [min(Y_pred), max(Y_pred)], label=label, linestyle='dashed', color='darkgray')
+        plt.title("Determining Plank's Constant", fontsize=18)
+        plt.xlabel('Frequency (Hz)', fontsize=14)
+        plt.ylabel('Required Work (J)', fontsize=14)
+        plt_range = (min(min(energy), min(Y_pred)),max(max(energy), max(Y_pred)))
+        plt.ylim(plt_range[0]-margin, plt_range[1]+margin)
+        plt.grid()
+        plt.legend(loc='upper left')
+        if (save):
+            fig.savefig(path, bbox_inches='tight', dpi=250)
+            plt.close('all')
+        else:
+            plt.show()
+        return weights
+
+    def __print_report(self, save=False):
+        stdout_fileno = sys.stdout
+        try:
+            if (save):
+                out_dir = './' + self.__name
+                if (not os.path.exists(out_dir)):
+                    os.mkdir(out_dir)
+                path = out_dir + '/' + 'report.txt'
+                sys.stdout = open(path, 'w', encoding='utf-8')
+            self.__display_log()
+            print('\n-------------------- Report --------------------')
+            print('Cesium-Antimony Work Function (Φ):')
+            print('  actual   = {0}-{1} eV'.format(self.__WF_CESIUM_ANTIMONY[0], self.__WF_CESIUM_ANTIMONY[1]))
+            print('  estimate = {:.5f} eV'.format(self.__work_func))
+            print("Plank's Constant (h):")
+            print('  actual   = {:.8e} J⋅s'.format(self.__PLANKS_CONSTANT))
+            print('  estimate = {:.8e} J⋅s'.format(self.__plank))
+            print('  % error  = {:.4f}%'.format(self.__get_plank_error()))
+            if (save):
+                sys.stdout.close()
+                sys.stdout = stdout_fileno
+        except:
+            sys.stdout.close()
+            sys.stdout = stdout_fileno
+            raise Exception('__print_report: fileIO exception')      
         return
 
     def display_options(self):
@@ -264,15 +340,38 @@ class Experiment(object):
     def __display_results(self):
         if (len(self.__datalog) > 0):
             self.__create_energy_df()
+            weights = self.__plot_energy_data()
+            self.__work_func = weights[0] / self.__ELECTRON_CHARGE
+            self.__plank = weights[1]
+            self.__print_report()
         else:
-            print('[+]The datalog is already empty')
+            print('[+]The datalog is currently empty')
         return
 
     def __save_results(self):
         if (len(self.__datalog) > 0):
-            x = 0
+            print('Warning - This action may overwrite existing save files')
+            confirmation = input('Would you like to proceed (y/n)?: ').lower()
+            while (confirmation != 'y' and confirmation != 'n'):
+                cprint("ERROR: invalid input: please enter either 'y' or 'n'", 'red')
+                confirmation = input('Would you like to proceed (y/n)?: ').lower()
+            if (confirmation == 'y'):
+                try:
+                    out_dir = './' + self.__name
+                    if (not os.path.exists(out_dir)):
+                        os.mkdir(out_dir)
+                    self.__create_energy_df()
+                    path = out_dir + '/' + 'source_energies.csv'
+                    self.__energy_df.to_csv(path, encoding='utf-8', index=False)
+                    weights = self.__plot_energy_data(save=True)
+                    self.__work_func = weights[0] / self.__ELECTRON_CHARGE
+                    self.__plank = weights[1]
+                    self.__print_report(save=True)
+                    print('[+]The results have been saved')
+                except:
+                    cprint('ERROR: save_results: unable to save results to file', 'red')
         else:
-            print('[+]The datalog is already empty')
+            print('[+]The datalog is currently empty')
         return
 
     def __clear_log(self):

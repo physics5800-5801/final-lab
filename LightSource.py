@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from termcolor import cprint
-import piplates.DAQC2plate as DAQC2
+# import piplates.DAQC2plate as DAQC2
 
 ######################################################################
 ## Authorship Information
@@ -35,7 +35,7 @@ __email__ = "connergraham888@gmail.com"
 __status__ = "Development"
 
 ######################################################################
-# Class Definition
+# Light_Source Class Definition
 ######################################################################
 
 class Light_Source(object):
@@ -61,21 +61,20 @@ class Light_Source(object):
         return self.__source_df
 
     def get_stopping_voltage(self):
-        return self.__stop_volatge
+        return self.__stop_voltage
 
-    def get_color(self):
-        λ = self.__wavelength
-        if (λ >= 400 and λ < 450):
+    def __get_color(self):
+        if (self.__wavelength >= 400 and self.__wavelength < 450):
             return 'darkviolet'
-        elif (λ >= 450 and λ < 500):
+        elif (self.__wavelength >= 450 and self.__wavelength < 500):
             return 'blue'
-        elif (λ >= 500 and λ < 570):
+        elif (self.__wavelength >= 500 and self.__wavelength < 570):
             return 'forestgreen'
-        elif (λ >= 570 and λ < 590):
+        elif (self.__wavelength >= 570 and self.__wavelength < 590):
             return 'gold'
-        elif (λ >= 590 and λ < 610):
+        elif (self.__wavelength >= 590 and self.__wavelength < 610):
             return 'darkorange'
-        elif (λ >= 610 and λ <= 700):
+        elif (self.__wavelength >= 610 and self.__wavelength <= 700):
             return 'red'
         else:
             return 'black'
@@ -134,8 +133,8 @@ class Light_Source(object):
         for i in range(voltages.size):
             V_r = voltages[i]
             source_data[i,0] = V_r
-            DAQC2.setDAC(0,0,V_r)
-            V_p = DAQC2.getADC(0,0) - DAQC2.getADC(0,1)
+            # DAQC2.setDAC(0,0,V_r)
+            # V_p = DAQC2.getADC(0,0) - DAQC2.getADC(0,1)
             source_data[i,1] = V_p
             source_data[i,2] = dark_current
         self.__create_source_df(source_data)
@@ -151,11 +150,14 @@ class Light_Source(object):
         retarding_voltage = np.array(self.__source_df['V_r'], dtype='float').reshape(-1,1)
         photocurrent = np.array(self.__source_df['I_φ'], dtype='float').reshape(-1,1)
         plt.scatter(retarding_voltage, photocurrent, color='black')
-        plt.title('{0: .2f}nm {1:} Stopping Voltage'.format(self.__wavelength, self.__source_type), fontsize=18)
+        plt.title('{0:.2f}nm {1:} Stopping Voltage'.format(self.__wavelength, self.__source_type), fontsize=18)
+        label = 'V_s = {:.4f}'.format(self.__stop_voltage)
+        plt.axvline(x=self.__stop_voltage, color=self.__get_color(), label=label) 
         plt.xlabel('Retarding Voltage (V)', fontsize=14)
         plt.ylabel('Photocurrent (µA)', fontsize=14)
         plt.gca().invert_yaxis()
         plt.grid()
+        plt.legend(loc='lower left')
         plt.show()
         return
 
@@ -168,11 +170,14 @@ class Light_Source(object):
         photocurrent = np.array(self.__source_df['I_φ'], dtype='float').reshape(-1,1)
         fig = plt.figure()
         plt.scatter(retarding_voltage, photocurrent, color='black')
-        plt.title('{0: .2f}nm {1:} Stopping Voltage'.format(self.__wavelength, self.__source_type), fontsize=18)
+        label = 'V_s = {:.4f}'.format(self.__stop_voltage)
+        plt.axvline(x=self.__stop_voltage, color=self.__get_color(), label=label) 
+        plt.title('{0:.2f}nm {1:} Stopping Voltage'.format(self.__wavelength, self.__source_type), fontsize=18)
         plt.xlabel('Retarding Voltage (V)', fontsize=14)
         plt.ylabel('Photocurrent (µA)', fontsize=14)
         plt.gca().invert_yaxis()
         plt.grid()
+        plt.legend(loc='lower left')
         fig.savefig(path, bbox_inches='tight', dpi=250)
         plt.close('all')
         return
