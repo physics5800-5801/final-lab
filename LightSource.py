@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from termcolor import cprint
-# import piplates.DAQC2plate as DAQC2
+import piplates.DAQC2plate as DAQC2
 
 ######################################################################
 ## Authorship Information
@@ -215,9 +215,9 @@ class Light_Source(object):
             V_r = voltages[i]
             source_data[i,0] = V_r
             # Set retarding voltage to supply to photodiode
-            # DAQC2.setDAC(0,0,V_r)
+            DAQC2.setDAC(0,0,V_r)
             # Measure resulting photocurrent
-            # V_p = DAQC2.getADC(0,0) - DAQC2.getADC(0,1)
+            V_p = DAQC2.getADC(0,0) - DAQC2.getADC(0,1)
             source_data[i,1] = V_p
             source_data[i,2] = dark_current
         # Store data in dataframe
