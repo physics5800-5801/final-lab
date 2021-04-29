@@ -38,12 +38,11 @@ __status__ = "Development"
 ######################################################################
 
 def print_welcome_banner():
-    """
-    FIXME Prints the program welcome banner and instructions.
-    """
-    print('Welcome! Create your own list of rectangles.')
-    print('You will be asked to provide information about each rectangle in your list by name.')
-    print('Type the word stop for the rectangle name when you are done.\n')
+    """Prints the program welcome banner and instructions."""
+    print('Welcome! Perform your own Photoelectric Effect experiment.')
+    print('You will be asked to provide information about various light sources.')
+    print("From this information, you will be able to approximate Plank's constant.")
+    print("Select the 'Quit' option for the experiment when you are done.\n")
     return
 
 def get_option(min=0, max=sys.maxsize):
